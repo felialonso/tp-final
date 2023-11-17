@@ -1,4 +1,4 @@
-import pygame, random 
+import pygame, random
 
 WIDTH = 800
 HEIGHT = 600
@@ -12,6 +12,13 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Shooter") #Para darle titulo a la ventana 
 clock = pygame.time.Clock() #Controlar nuestro frames por segundos 
 
+#Score en pantalla
+def draw_text(surface, text, size, x, y):#Se le pasa surface q es para saber donde quiero dibujar el texto
+    font = pygame.font.SysFont("serif", size)
+    text_surface = font.render(text, True, WHITE)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surface.blit(text_surface, text_rect)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -45,7 +52,7 @@ class Player(pygame.sprite.Sprite):
 class Enemigos(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.image.load(r"C:\Users\falon\OneDrive\Escritorio\LAB Y PROGRAMACION\SPACE INVADERS\assets\green.png").convert()
+        self.image = pygame.image.load(r"C:\Users\falon\OneDrive\Escritorio\tp-final\SPACE INVADERS\assets\green.png").convert()
         self.image.set_colorkey(WHITE) #Esta funcion se encarga de remover el fondo negro de la imagen
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(WIDTH - self.rect.width)
@@ -68,7 +75,7 @@ class Enemigos(pygame.sprite.Sprite):
 class Bala(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load(r"C:\Users\falon\OneDrive\Escritorio\LAB Y PROGRAMACION\SPACE INVADERS\assets\BALA.png").convert()
+        self.image = pygame.image.load(r"C:\Users\falon\OneDrive\Escritorio\tp-final\SPACE INVADERS\assets\BALA.png").convert()
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect() 
         self.rect.y = y  
@@ -83,10 +90,11 @@ class Bala(pygame.sprite.Sprite):
 
 
 #Cargar el fondo
-background = pygame.image.load(r"C:\Users\falon\OneDrive\Escritorio\LAB Y PROGRAMACION\SPACE INVADERS\assets\fondo.jpg").convert()
+background = pygame.image.load(r"C:\Users\falon\OneDrive\Escritorio\tp-final\SPACE INVADERS\assets\fondo1.png").convert()
+background = pygame.transform.scale(background, (WIDTH, HEIGHT)) #Esto transforma la imagen a la escala del ancho y alto 
 
 all_sprites = pygame.sprite.Group()
-enemigo_sprites = pygame.sprite.Group()
+enemigo_list = pygame.sprite.Group()
 balas = pygame.sprite.Group()
 
 player = Player()
@@ -95,7 +103,9 @@ all_sprites.add(player) #Aca se agrega al jugador a la lista
 for i in range(8):
     enemigo = Enemigos()
     all_sprites.add(enemigo)
-    enemigo_sprites.add(enemigo)
+    enemigo_list.add(enemigo)
+
+score = 0
 
 running = True 
 while running:
@@ -107,17 +117,26 @@ while running:
             if event.key == pygame.K_SPACE:
                 player.shoot()
 
-
-    
     all_sprites.update()
 
-    hits =  pygame.sprite.spritecollide(player, enemigo_sprites, True) #Esto es la colicion
+    hits = pygame.sprite.groupcollide(enemigo_list, balas, True, True)
+    for hit in hits:
+        score += 10
+        enemigo = Enemigos()
+        all_sprites.add(enemigo)
+        enemigo_list.add(enemigo)
+
+    #Colision contra el jugador 
+    hits =  pygame.sprite.spritecollide(player, enemigo_list, True) #Esto es la colicion
     if hits:
         running = False
 
     screen.blit(background, [0, 0])
 
     all_sprites.draw(screen)
+
+    #Marcador
+    draw_text(screen, str(score), 25 , WIDTH // 2 , 10)
 
     pygame.display.flip()
 pygame.quit()
